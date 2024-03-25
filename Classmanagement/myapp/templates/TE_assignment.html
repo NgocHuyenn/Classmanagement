@@ -1,0 +1,211 @@
+<!-- user_list.html -->
+
+{% extends 'index.html' %}
+
+{% block content %}
+
+<style>
+    /* Thêm CSS tùy chỉnh nếu cần */
+    .create-assignment-form, .edit-form, .delete-form {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9999; /* Đảm bảo form luôn hiển thị phía trên cùng */
+      background-color: white;
+      padding: 30px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    }
+    .create-assignment-form .btn-submit {
+    /* Thêm các thuộc tính CSS tùy chỉnh ở đây */
+    background-color: #0f5199a5; /* Màu nền */
+    color: #fff; /* Màu chữ */
+    border: none; /* Không có đường viền */
+    padding: 10px 20px; /* Padding */
+    border-radius: 5px; /* Bo tròn góc */
+}
+
+    /* Hover state */
+    .create-assignment-form .btn-submit:hover {
+        background-color: #04264b; /* Màu nền khi di chuột qua */
+    }
+
+    .custom-button {
+        background-color: #046b19; /* Màu nền */
+        color: #fff; /* Màu chữ */
+        border: none; /* Không viềcustom-buttonn */
+        padding: 7px; /* Kích thước padding */
+        text-align: center; /* Căn giữa nội dung */
+        text-decoration: none; /* Không gạch chân */
+        display: inline-block; /* Hiển thị như block */
+        font-size: 16px; /* Cỡ chữ */
+        border-radius: 5px; /* Bo góc */
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+        color: #333; /* Màu của nút x */
+        font-size: 20px; /* Kích thước của nút x */
+        background: none;
+        border: none;
+    }
+
+    .close-btn:hover {
+        color: red; /* Màu của nút x khi di chuột qua */
+    }
+  </style>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <a href="{#}" class="btn btn-info mb-3">Create Assignment</a>
+                    <form class= "create-assignment-form" method="POST" action="{% url 'create_assignment' %}" enctype="multipart/form-data">
+                        <button type="button" class="close-btn" onclick="closeForm()">X</button>
+                        {% csrf_token %}
+                        <h2>Create New Assignment</h2>
+                        <div class="form-group">
+                            <label for="title">Title:</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Description:</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="file">Upload File:</label>
+                            <input type="file" class="form-control-file" id="file" name="file" accept=".pdf,.docx,.txt,.xls,.xlsx,.csv,.jpg,.jpeg,.png" required>
+                        </div>
+                        <button type="submit" class="btn btn-info">Submit</button>
+                    </form>
+            </div>
+        </div>
+    </div>
+    <!-- assignments list -->
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-9 mx-auto">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="col-md-1">#</th>
+                            <th scope="col" class="col-md-4">Assignment</th>
+                            <th scope="col" class="col-md-4">Due to</th>
+                            <th scope="col">Action</th>
+                            <!-- Thêm các cột khác nếu cần -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assignment in assignments %}
+                        <tr>
+                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>{{ assignment.title }}</td>
+                            <td>{{ assignment.created_at }}</td>
+                            <td>
+                                <a href="{% url 'detail_assignment' assignment.title %}" class="btn btn-info detail-btn custom-button" onclick="showForm('{{ assignment.id }}', 'detail')">Detail</a>
+                                <a href="#" class="btn btn-primary edit-btn" onclick="showForm('{{ assignment.id }}', 'edit')">Edit</a>
+                                    <form id="edit-form-{{assignment.id }}" class="edit-form" method="POST" action="{% url 'edit_assignment' assignment.id %}" enctype="multipart/form-data">
+                                        <button type="button" class="close-btn" onclick="closeForm()">X</button>
+                                        {% csrf_token %}
+                                        <h2>Edit Assignment</h2> 
+                                        <div class="form-group">
+                                            <label for="title">Title:</label>
+                                            <input type="text" class="form-control" id="title" name="title" value="{{ assignment.title }}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="description">Description:</label>
+                                            <textarea class="form-control" id="description" name="description" rows="3" required>{{ assignment.description }}</textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="file">File:</label>
+                                            {% if assignment.file %}
+                                                <a href="{% url 'download_file' assignment.id %}"><span>{{ assignment.file }}</span></a> <!-- Hiển thị tên file cũ -->
+                                            {% endif %}
+                                            <input type="file" class="form-control-file" id="file" name="file" accept=".pdf,.docx,.txt,.xls,.xlsx,.csv,.jpg,.jpeg,.png">
+                                        </div>
+                                        <button type="submit" class="btn btn-info">Submit</button>
+                                    </form>
+                                <a href="#" class="btn btn-danger delete-btn" onclick="showForm('{{ assignment.id }}', 'delete')">Delete</a>
+                                    <form id="delete-form-{{ assignment.id }}" class="delete-form" action="{% url 'delete_assignment' assignment.id %}" method="post" >
+                                        {% csrf_token %}
+                                        <button type="button" class="close-btn" onclick="closeForm()">X</button>
+                                        <input type="hidden" name="_method" value="DELETE">
+                                        <div class="modal-body">
+                                            Are you sure you want to delete <b>{{ assignment.title }}</b>? This action cannot be undone.
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="hideForm('{{ assignment.id }}')">Cancel</button>
+                                            <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                                        </div>
+                                    </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    
+
+    <script>
+
+        function closeForm() {
+            var form = document.querySelectorAll(".create-assignment-form, .edit-form, .delete-form").forEach(function(form) {
+                form.style.display = 'none';
+            });
+        }
+
+        function hideForm(studentId) {
+            var formToHide = document.getElementById(`delete-form-${studentId}`);
+            formToHide.style.display = 'none';
+        } 
+        // Lấy thẻ <a> và form tương ứng
+        var toggleLink = document.querySelector('.btn-info');
+        var form = document.querySelector('.create-assignment-form');
+
+        // Thêm sự kiện click cho thẻ <a>
+        toggleLink.addEventListener('click', function(event) {
+            event.preventDefault(); // Ngăn chặn hành động mặc định của thẻ <a>
+
+            // Kiểm tra trạng thái hiển thị của form và thay đổi nó
+            if (form.style.display === "none") {
+                form.style.display = "block";
+            } else {
+                form.style.display = "none";
+            }
+        });
+
+        function showForm(assignmentId, formType) {
+            // Lấy form tương ứng với loại form được nhấp vào
+            var formToShow = document.getElementById(`${formType}-form-${assignmentId}`);
+            
+            // Kiểm tra xem form được nhấp vào đã hiển thị hay không
+            var isDisplayed = formToShow.style.display !== 'none';
+
+            // Ẩn tất cả các form trước khi hiển thị form mới
+            document.querySelectorAll('.edit-form, .delete-form').forEach(function(form) {
+                form.style.display = 'none';
+            });
+
+            // Nếu form được nhấp vào chưa hiển thị, hiển thị nó
+            if (!isDisplayed) {
+                formToShow.style.display = 'block';
+            }
+        }
+    </script>
+   
+{% endblock %}

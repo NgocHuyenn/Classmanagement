@@ -62,13 +62,12 @@ def get_tasks_html():
         task_html += f"<td>{task[3]}</td>"  # Estimate
         task_html += f"<td>{task[4]}</td>"  # Progress
         task_html += f'<td><a href="/delete-task/{task[0]}">Delete</a></td>'  # Delete
+        task_html += '<td><canvas id="progressCanvas" width="100" height="20"></canvas></td>'
         task_html += "</tr>"
     task_html += "</table>"
     html = read_file("taskmanager.html", "style.css")
     html = html.replace('<task_table>', task_html)
     return html
-
-# def get_message_html{}:
 
 # tạo phiên
 sessions = {}
@@ -197,8 +196,6 @@ class MyHandler(BaseHTTPRequestHandler):
 def read_file(file_html, file_css):
     html_content =''
     css_content = ''
-
-
     with open(file_html, "r") as html_file:
         html_content = html_file.read()
     
@@ -213,7 +210,7 @@ def read_file(file_html, file_css):
 # Tạo máy chủ HTTP
 def run():
     print('Starting server...')
-    server_address = ('127.0.0.1', 8080)
+    server_address = ('0.0.0.0', 8080)
     httpd = HTTPServer(server_address, MyHandler)
     print('Server started...')
     httpd.serve_forever()

@@ -1,0 +1,213 @@
+<!-- user_list.html -->
+
+{% extends 'index.html' %}
+
+{% block content %}
+
+<style>
+    /* Thêm CSS tùy chỉnh nếu cần */
+    .create-challenge-form, .edit-form, .delete-form {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 9999; /* Đảm bảo form luôn hiển thị phía trên cùng */
+        background-color: white;
+        padding: 30px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+    }
+    .create-challenge-form .btn-submit {
+    /* Thêm các thuộc tính CSS tùy chỉnh ở đây */
+    background-color: #0f5199a5; /* Màu nền */
+    color: #fff; /* Màu chữ */
+    border: none; /* Không có đường viền */
+    padding: 10px 20px; /* Padding */
+    border-radius: 5px; /* Bo tròn góc */
+}
+
+    /* Hover state */
+    .create-challenge-form .btn-submit:hover {
+        background-color: #04264b; /* Màu nền khi di chuột qua */
+    }
+
+    .custom-button {
+        background-color: #046b19; /* Màu nền */
+        color: #fff; /* Màu chữ */
+        border: none; /* Không viềcustom-buttonn */
+        padding: 7px; /* Kích thước padding */
+        text-align: center; /* Căn giữa nội dung */
+        text-decoration: none; /* Không gạch chân */
+        display: inline-block; /* Hiển thị như block */
+        font-size: 16px; /* Cỡ chữ */
+        border-radius: 5px; /* Bo góc */
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+        color: #333; /* Màu của nút x */
+        font-size: 20px; /* Kích thước của nút x */
+        background: none;
+        border: none;
+    }
+
+    .close-btn:hover {
+        color: red; /* Màu của nút x khi di chuột qua */
+    }
+  </style>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- create challenges  -->
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <a href="{#}" class="btn btn-info mb-3">Create Challenge</a>
+                    <form class= "create-challenge-form" method="POST" action="{% url 'create_challenge' %}" enctype="multipart/form-data">
+                        <button type="button" class="close-btn" onclick="closeForm()">X</button>
+                        {% csrf_token %}
+                        <h2>Create New Challenge</h2>
+                        <div class="form-group">
+                            <label for="title">Challenge name:</label>
+                            <input type="text" class="form-control" id="nameChallenge" name="nameChallenge" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="hint">Hint:</label>
+                            <textarea class="form-control" id="hint" name="hint" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="file">Upload File:</label>
+                            <input type="file" class="form-control-file" id="file" name="file" accept=".pdf,.docx,.txt" required>
+                        </div>
+                        <button type="submit" class="btn btn-info">Submit</button>
+                    </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- challenges list -->
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-9 mx-auto">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="col-md-1">#</th>
+                            <th scope="col" class="col-md-4">Challenge</th>
+                            <th scope="col" class="col-md-4">Due to</th>
+                            <th scope="col">Action</th>
+                            <!-- Thêm các cột khác nếu cần -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for challenge in challenges %}
+                        <tr>
+                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>{{ challenge.nameChallenge }}</td>
+                            <td>{{ challenge.created_at }}</td>
+                            <td>
+                                <div class="container">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <a href="#" class="btn btn-info edit-btn custom-button" onclick="toggleForm('edit-form-{{ challenge.id }}')">Edit</a>
+                                            <form id="edit-form-{{ challenge.id }}" class="edit-form" method="POST" action="{% url 'edit_challenge' challenge.id %}"  enctype="multipart/form-data"> 
+                                                {% csrf_token %}
+                                                <button type="button" class="close-btn close-btn-{{ challenge.id }}" onclick="toggleForm('edit-form-{{ challenge.id }}')">X</button>
+                                                <h3>Detail challenge</h3> 
+                                                <div class="form-group">
+                                                    <label for="nameChallenge">Challenge Name:</label>
+                                                    <input type="text" class="form-control" id="nameChallenge" name="nameChallenge" value="{{ challenge.nameChallenge }}" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="hint">Hint:</label>
+                                                    <textarea class="form-control" id="hint" name="hint" rows="3" required>{{ challenge.hint }}</textarea>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="file">File:</label>
+                                                    {% if challenge.file %}
+                                                        <a href="{% url 'download_file' challenge.id %}"><span>{{ challenge.file }}</span></a> <!-- Hiển thị tên file cũ -->
+                                                    {% endif %}
+                                                    <input type="file" class="form-control-file" id="file" name="file" accept=".pdf,.docx,.txt,.xls,.xlsx,.csv,.jpg,.jpeg,.png">
+                                                </div>
+                                                <button type="submit" class="btn btn-info">Submit</button>
+                                            </form>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <a href="#" class="btn btn-danger delete-btn" onclick="toggleForm('delete-form-{{ challenge.id }}')">Delete</a>
+                                            <form id="delete-form-{{ challenge.id }}" class="delete-form" action="{% url 'delete_challenge' challenge.id %}" method="post" >
+                                                {% csrf_token %}
+                                                <button type="button" class="close-btn" onclick="closeForm()">X</button>
+                                                <input type="hidden" name="_method" value="DELETE">
+                                                <div class="modal-body">
+                                                    Are you sure you want to delete <b>{{ challenge.nameChallenge }}</b>? This action cannot be undone.
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="hideForm('{{ challenge.id }}')">Cancel</button>
+                                                    <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    
+
+    <script>
+
+        function closeForm() {
+            var form = document.querySelectorAll(".create-challenge-form, .delete-form").forEach(function(form) {
+                form.style.display = 'none';
+            });
+        }
+
+     
+        // Lấy thẻ <a> và form tương ứng
+        var toggleLink = document.querySelector('.btn-info');
+        var form = document.querySelector('.create-challenge-form');
+
+        // Thêm sự kiện click cho thẻ <a>
+        toggleLink.addEventListener('click', function(event) {
+            event.preventDefault(); // Ngăn chặn hành động mặc định của thẻ <a>
+
+            // Kiểm tra trạng thái hiển thị của form và thay đổi nó
+            if (form.style.display === "none") {
+                form.style.display = "block";
+            } else {
+                form.style.display = "none";
+            }
+        });
+
+
+        function toggleForm(formId) {
+            var form = document.getElementById(formId);
+            var forms = document.querySelectorAll('.edit-form, .delete-form');
+            
+            forms.forEach(function(form) {
+                if (form.id === formId && form.style.display !== "block") {
+                    form.style.display = "block";
+                } else {
+                    form.style.display = "none";
+                }
+            });
+        }
+    </script>
+   
+{% endblock %}

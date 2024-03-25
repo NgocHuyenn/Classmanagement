@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Education Management</title>
+        <!-- Bootstrap CSS -->
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+        <!-- Font Awesome -->
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+        <style>
+            .navbar-brand {
+                font-size: 1.5rem;
+            }
+            .navbar-nav li {
+                padding: 0 10px;
+            }
+        </style>
+
+    </head>
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="http://localhost:8000/home/">EDUCATION MANAGEMENT</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item">
+                            {% if user.is_authenticated %}
+                                <a class="nav-link" href="{% url 'profile' user.username %}">View your profile</a>
+                            {% endif %}
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'student' %}">List of students</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'teacher' %}">List of teachers</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'message' %}">Message</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'assignment' %}">Assignment</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'challenge' %}">Challenge</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+             
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        <!-- Form -->
+        <div class="container mt-5">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="custom-form">
+                        <h2 class="text-center mb-4">Your profile</h2>
+                        <form action="{% url 'profile' username=user.username %}" method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="username">Username:</label>
+                                <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="fullname">Full Name:</label>
+                                <input type="text" class="form-control" id="fullname" name="fullname" value="{{ user.last_name }} {{ user.first_name }}" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email:</label>
+                                <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="phone_number">Phone:</label>
+                                <input type="text" class="form-control" id="phone_number" name="phone_number" value="{{ user.phone_number }}">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bootstrap JS -->
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+        <script>
+            // Toggle password visibility
+            document.getElementById("togglePassword").addEventListener("click", function() {
+                var passwordInput = document.getElementById("password");
+                var toggleButton = document.getElementById("togglePassword");
+        
+                if (passwordInput.type === "password") {
+                    passwordInput.type = "text";
+                    toggleButton.textContent = "Hide";
+                } else {
+                    passwordInput.type = "password";
+                    toggleButton.textContent = "Show";
+                }
+            });
+        </script>
+
+    </body>
+</html>

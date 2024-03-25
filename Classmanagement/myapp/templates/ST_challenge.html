@@ -1,0 +1,158 @@
+<!-- user_list.html -->
+
+{% extends 'index.html' %}
+
+{% block content %}
+
+<style>
+    /* Thêm CSS tùy chỉnh nếu cần */
+    .detail-form, .submit-form{
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 9999; /* Đảm bảo form luôn hiển thị phía trên cùng */
+        background-color: white;
+        padding: 30px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+    }
+   
+
+    /* Hover state */
+    .create-challenge-form .btn-submit:hover {
+        background-color: #04264b; /* Màu nền khi di chuột qua */
+    }
+
+    .custom-button {
+        background-color: #e2f991; /* Màu nền */
+        color: #000; /* Màu chữ */
+        border: none; /* Không viềcustom-buttonn */
+        padding: 7px; /* Kích thước padding */
+        text-align: center; /* Căn giữa nội dung */
+        text-decoration: none; /* Không gạch chân */
+        display: inline-block; /* Hiển thị như block */
+        font-size: 16px; /* Cỡ chữ */
+        border-radius: 5px; /* Bo góc */
+    }
+
+    .submit-button {
+        background-color: #11df52; /* Màu nền */
+        color: #000; /* Màu chữ */
+        border: none; /* Không viềcustom-buttonn */
+        padding: 7px; /* Kích thước padding */
+        text-align: center; /* Căn giữa nội dung */
+        text-decoration: none; /* Không gạch chân */
+        display: inline-block; /* Hiển thị như block */
+        font-size: 16px; /* Cỡ chữ */
+        border-radius: 5px; /* Bo góc */
+        font-weight: 100; 
+    }
+
+    .submit-button:hover {
+        background-color: #129919; /* Màu nền khi di chuột qua */
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+        color: #333; /* Màu của nút x */
+        font-size: 20px; /* Kích thước của nút x */
+        background: none;
+        border: none;
+    }
+
+    .close-btn:hover {
+        color: red; /* Màu của nút x khi di chuột qua */
+    }
+  </style>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- challenges list -->
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-9 mx-auto">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="col-md-1">#</th>
+                            <th scope="col" class="col-md-4">Challenge</th>
+                            <th scope="col" class="col-md-4">Due to</th>
+                            <th scope="col">Action</th>
+                            <!-- Thêm các cột khác nếu cần -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for challenge in challenges %}
+                        <tr>
+                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>{{ challenge.nameChallenge }}</td>
+                            <td>{{ challenge.created_at }}</td>
+                            <td>
+                                <div class="container">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <a href="#" class="btn btn-info detail-btn custom-button" onclick="toggleForm('detail-form-{{ challenge.id }}')">Hint</a>
+                                            <form id="detail-form-{{ challenge.id }}" class="detail-form" enctype="multipart/form-data" style="width: 50%;"> 
+                                                {% csrf_token %}
+                                                <button type="button" class="close-btn close-btn-{{ challenge.id }}" onclick="toggleForm('edit-form-{{ challenge.id }}')">X</button>
+                                                <div class="form-group" style="width: 100%;">
+                                                    <h3>Hint</h3>
+                                                    <div class="input-group">
+                                                        <textarea class="form-control" id="hint" name="hint" rows="3" required>{{ challenge.hint }}</textarea>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <a href="#" class="btn btn-info submit-button" onclick="toggleForm('submit-form-{{ challenge.id }}')"><b>Submit</b></a>
+                                            <form id="submit-form-{{ challenge.id }}" class="submit-form" style="display:none;" method="post" action="{% url 'answer_challenge' challenge.id%}">
+                                                <button type="button" class="close-btn close-btn-{{ challenge.id }}" onclick="toggleForm('submit-form-{{ challenge.id }}')">X</button>
+                                                {% csrf_token %}
+                                                <div class="form-group">
+                                                    <label for="answer">Enter the answer:</label>
+                                                    <input type="text" class="form-control" id="answer" name="answer" required>
+                                                </div>  
+                                                <button type="submit" class="btn btn-info submit-button">Submit</button>
+                                            </form>                                            
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    
+
+    <script>
+
+        function toggleForm(formId) {
+            var form = document.getElementById(formId);
+            var forms = document.querySelectorAll('.detail-form, .submit-form');
+            
+            forms.forEach(function(form) {
+                if (form.id === formId && form.style.display !== "block") {
+                    form.style.display = "block";
+                } else {
+                    form.style.display = "none";
+                }
+            });
+        }
+    </script>
+   
+{% endblock %}

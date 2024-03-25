@@ -1,0 +1,42 @@
+
+
+
+
+<td>
+    <a href="{% url 'detail_assignment' assignment.title %}" class="btn btn-info detail-btn custom-button" onclick="showForm('{{ assignment.id }}', 'detail')">Detail</a>
+    <a href="#" class="btn btn-primary edit-btn" onclick="showForm('{{ assignment.id }}', 'edit')">Edit</a>
+        <form id="edit-form-{{assignment.id }}" class="edit-form" method="POST" action="{% url 'edit_assignment' assignment.id %}" enctype="multipart/form-data">
+            <button type="button" class="close-btn" onclick="closeForm()">X</button>
+            {% csrf_token %}
+            <h2>Edit Assignment</h2> 
+            <div class="form-group">
+                <label for="title">Title:</label>
+                <input type="text" class="form-control" id="title" name="title" value="{{ assignment.title }}" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea class="form-control" id="description" name="description" rows="3" required>{{ assignment.description }}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="file">File:</label>
+                {% if assignment.file %}
+                    <a href="{% url 'download_file' assignment.id %}"><span>{{ assignment.file }}</span></a> <!-- Hiển thị tên file cũ -->
+                {% endif %}
+                <input type="file" class="form-control-file" id="file" name="file" accept=".pdf,.docx,.txt,.xls,.xlsx,.csv,.jpg,.jpeg,.png">
+            </div>
+            <button type="submit" class="btn btn-info">Submit</button>
+        </form>
+    <a href="#" class="btn btn-danger delete-btn" onclick="showForm('{{ assignment.id }}', 'delete')">Delete</a>
+        <form id="delete-form-{{ assignment.id }}" class="delete-form" action="{% url 'delete_assignment' assignment.id %}" method="post" >
+            {% csrf_token %}
+            <button type="button" class="close-btn" onclick="closeForm()">X</button>
+            <input type="hidden" name="_method" value="DELETE">
+            <div class="modal-body">
+                Are you sure you want to delete <b>{{ assignment.title }}</b>? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="hideForm('{{ assignment.id }}')">Cancel</button>
+                <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </form>
+</td>

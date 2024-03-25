@@ -1,0 +1,73 @@
+<!-- index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Education Management</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .navbar-brand {
+            font-size: 1.5rem;
+        }
+        .navbar-nav li {
+            padding: 0 10px;
+        }
+    </style>
+
+
+</head>
+<body>    
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="http://localhost:8000/home/">EDUCATION MANAGEMENT</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    {% if user.is_authenticated %}
+                        <a class="nav-link" href="{% url 'profile' user.username %}">View your profile</a>
+                    {% endif %}
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'student' %}">List of students</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'teacher' %}">List of teachers</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'message' %}">Message</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'assignment' %}">Assignment</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'challenge' %}">Challenge</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+
+    {% block content %}
+    <!-- Nội dung của trang con sẽ được thêm vào đây -->
+    {% endblock %}
+
+    <!-- Bootstrap JavaScript và các tệp JavaScript khác -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

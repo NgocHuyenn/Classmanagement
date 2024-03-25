@@ -1,0 +1,340 @@
+
+<!-- user_list.html -->
+{% extends 'index.html' %}
+
+{% block content %}
+
+    <style>
+        .new-message-form{
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            background-color: white;
+            padding: 30px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            width: 30%; /* Độ rộng của form */
+
+        }
+
+        .message-form .btn-send {
+            background-color: #0f5199a5;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+
+        .sent-message-form, .inbox-form {
+            position: fixed;
+            top: 50%;
+            left: 45%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            width: 70%; /* Độ rộng của form là 80% của phần tử chứa */
+            margin-top: 20px; /* Khoảng cách từ đỉnh trang xuống form */
+        }
+
+        .hidden-table, .delete-form{
+            position: fixed;
+            top: 50px;
+            right: -150px;
+        }
+        .hidden-table th, .hidden-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .fixed-heading {
+            position: -webkit-sticky; /* Safari */
+            position: sticky;
+            top: 0;
+            background-color: white; /* Màu nền của phần tử */
+            z-index: 999; /
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            color: #333; /* Màu của nút x */
+            font-size: 20px; /* Kích thước của nút x */
+            background: none;
+            border: none;
+        }
+
+        .close-btn:hover {
+            color: red; /* Màu của nút x khi di chuột qua */
+        }
+    </style>
+
+    {% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-success" role="alert">
+            {{ message }}
+        </div>
+    {% endfor %}
+    {% endif %}
+    <!-- nội dung trang -->
+    <div class="container mt-5">
+        <div class="row">
+            <!-- Cột bên trái -->
+            <div class="col-md-3">
+                    <h2>Message</h2> <br>
+                    <!-- Danh sách chức năng -->
+                    <div class="list-group" id="menuList">
+                    <!-- Chức năng soạn tin nhắn mới -->
+                    <a href="#" class="list-group-item list-group-item-action" id="composeBtn">Compose New Message</a>
+                        <div class="container mt-3">
+                            <form class="new-message-form" action="{% url 'compose_message' %}" style="display: none;" method="post" >
+                                <button type="button" class="close-btn" onclick="closeForm()">X</button>
+                                {% csrf_token %}
+                                <h2 class="fixed-heading">New Message </h2>
+                                <div class="form-group">
+                                    <label for="sender">From:</label>
+                                    <input type="text" class="form-control" id="sender" name="sender" value="{{ request.user.email }}"  readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label for="receiver">To:</label>
+                                    <input type="text" class="form-control" id="receiver" name="receiver" required
+                                    oninvalid="this.setCustomValidity('Email recipient cannot be empty.')"
+                                    oninput="this.setCustomValidity('')">
+                                </div>
+                                <div class="form-group">
+                                    <label for="subject">Subject:</label>
+                                    <input type="text" class="form-control" id="subject" name="subject">
+                                </div>
+                                <div class="form-group">
+                                    <label for="body">Body:</label>
+                                    <textarea class="form-control" id="body" name="body" rows="5"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Send</button>
+                                <div class="alert alert-success mt-3" id="success-message" {% if success_message %} style="display: block;" {% else %} style="display: none;" {% endif %}>{{ success_message }}</div>
+                            </form>
+                        </div>
+                    <!-- Chức năng xem tin nhắn đã gửi -->
+                    <a href="#" class="list-group-item list-group-item-action" id="sentMessagesBtn">Sent Messages</a>
+                        <div class="container mt-3">
+                            <div class="sent-message-form" style="display: none;">
+                                <div class="container">
+                                    <div class="row justify-content-center mt-8">
+                                        <div class="col-md-6">
+                                            <h2 class="fixed-heading">Sent Messages</h2>
+                                            <ul class="list-group">
+                                                {% for message in sent_messages %}
+                                                        <li class="list-group-item">
+                                                            <a href="#" class="text-decoration-none text-dark toggle-table" data-message-id="{{ message.id }}"><b>Subject:</b> {{ message.subject }} - <b>Receiver:</b> {{ message.receiver.email }}</a>
+                                                                <a href="#" class="btn btn-danger delete-btn" onclick="showDeleteForm('{{ message.id }}')">
+                                                                    <i class="bi bi-x-circle"></i> <!-- Sử dụng biểu tượng x tròn của Bootstrap Icons -->
+                                                                </a>
+                                                                <form id="delete-form-{{ message.id }}" class="delete-form" style="display:none;" action="{% url 'delete_message' message.id %}" method="post" >
+                                                                    {% csrf_token %}
+                                                                    <input type="hidden" name="_method" value="DELETE">
+                                                                    <div class="modal-body">
+                                                                        Are you sure you want to delete this message?
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="closeDeleteForm('{{ message.id }}')">Cancel</button>
+                                                                        <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                                                                    </div>
+                                                                </form>
+                                                                <table id="table-{{ message.id }}" class="hidden-table" style="display: none;" >
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td><strong>Receiver:</strong></td>
+                                                                            <td>{{ message.receiver.email }}</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><strong>Subject:</strong></td>
+                                                                            <td>{{ message.subject }}</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><strong>Body:</strong></td>
+                                                                            <td>{{ message.body }}</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><strong>Timestamp:</strong></td>
+                                                                            <td>{{ message.timestamp }}</td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                        </li>
+                                                {% endfor %}
+                                            </ul>                                                 
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <!-- Chức năng xem tin nhắn đã nhận -->
+                    <a href="#" class="list-group-item list-group-item-action" id="inboxBtn">Inbox</a>
+                        <div class="container mt-3">
+                            <div class="inbox-form" style="display: none;">
+                                <div class="container">
+                                    <div class="row justify-content-center mt-8">
+                                        <div class="col-md-6">
+                                            <h2 class="fixed-heading">Inbox</h2>
+                                            <ul class="list-group">
+                                                {% for message in received_messages %}
+                                                        <li class="list-group-item">
+                                                            <a href="#" class="text-decoration-none text-dark toggle-table" onclick="toggleTable('{{ message.id }}')" data-message-id="{{ message.id }}" ><b>Subject:</b> {{ message.subject }} - <b>Sender:</b> {{ message.sender.email }}</a>
+                                                            <table id="table-{{ message.id }}" class="hidden-table" style="display: none;" >
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td><strong>Sender:</strong></td>
+                                                                        <td>{{ message.sender.email }}</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td><strong>Subject:</strong></td>
+                                                                        <td>{{ message.subject }}</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td><strong>Body:</strong></td>
+                                                                        <td>{{ message.body }}</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td><strong>Timestamp:</strong></td>
+                                                                        <td>{{ message.timestamp }}</td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </li>
+                                                {% endfor %}
+                                            </ul>                                                 
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var composeBtn = document.getElementById('composeBtn');
+            var sentMessagesBtn = document.getElementById('sentMessagesBtn');
+            var inboxBtn = document.getElementById('inboxBtn');
+            var composeForm = document.querySelector('.new-message-form');
+            var sentMessagesForm = document.querySelector('.sent-message-form');
+            var inboxForm = document.querySelector('.inbox-form');
+            
+            // Sự kiện click cho nút Compose New Message 
+            composeBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                
+                // Ẩn form của Sent Messages nếu đang hiển thị
+                sentMessagesForm.style.display = "none";
+                inboxForm.style.display = "none";
+                
+                // Hiển thị hoặc ẩn form của Compose New Message
+                if (composeForm.style.display === "none") {
+                    composeForm.style.display = "block";
+                } else {
+                    composeForm.style.display = "none";
+                }
+            });
+            
+            // Sự kiện click cho nút Sent Messages
+            sentMessagesBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                
+                // Ẩn form của Compose New Message nếu đang hiển thị
+                composeForm.style.display = "none";
+                inboxForm.style.display = "none";
+                
+                // Hiển thị hoặc ẩn form của Sent Messages
+                if (sentMessagesForm.style.display === "none") {
+                    sentMessagesForm.style.display = "block";
+                } else {
+                    sentMessagesForm.style.display = "none";
+                }
+            });
+
+            // Sự kiện click cho nút Inbox
+            inboxBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                
+                // Ẩn form của Compose New Message nếu đang hiển thị
+                sentMessagesForm.style.display = "none";
+                composeForm.style.display = "none";
+                
+                // Hiển thị hoặc ẩn form của Sent Messages
+                if (inboxForm.style.display === "none") {
+                    inboxForm.style.display = "block";
+                } else {
+                    inboxForm.style.display = "none";
+                }
+            });
+        });
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll('.toggle-table').forEach(function(link) {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    // Lấy số thứ tự tin nhắn từ thuộc tính data-message-id của thẻ <a>
+                    var messageId = link.getAttribute('data-message-id');
+
+                    var deleteForm = document.getElementById(`delete-form-${messageId}`);
+                    if (deleteForm) deleteForm.style.display = "none";
+                    
+                    // Lấy bảng tương ứng với số thứ tự tin nhắn
+                    var table = document.getElementById('table-' + messageId);
+                    
+                    // Kiểm tra trạng thái hiện tại của bảng
+                    if (table.style.display === "table") {
+                        // Nếu bảng đang hiển thị, ẩn nó
+                        table.style.display = "none";
+                    } else {
+                        // Nếu bảng đang ẩn, hiển thị nó
+                        table.style.display = "table";
+                        
+                        // Ẩn tất cả các bảng khác trước khi hiển thị bảng này
+                        document.querySelectorAll('.hidden-table').forEach(function(tbl) {
+                            if (tbl !== table) {
+                                tbl.style.display = "none";
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+        function closeForm(){
+            var form = document.querySelector(".new-message-form");
+            form.style.display = 'none';
+        }
+
+        function closeDeleteForm(id){
+        var formToClose = document.getElementById(`delete-form-${id}`);
+            formToClose.style.display = "none";
+        }
+
+        function showDeleteForm(id) {
+            // Lấy form tương ứng với loại form được nhấp vào
+            var formToShow = document.getElementById(`delete-form-${id}`);
+            
+            // Kiểm tra xem form được nhấp vào đã hiển thị hay không
+            var isDisplayed = formToShow.style.display !== 'none';
+
+            var table = document.getElementById('table-' + id);
+            table.style.display = "none";
+
+            // Nếu form được nhấp vào chưa hiển thị, hiển thị nó
+            if (!isDisplayed) {
+                formToShow.style.display = 'block';
+            }
+        }
+
+    </script>
+
+
+{% endblock %}

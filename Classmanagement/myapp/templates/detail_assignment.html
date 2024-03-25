@@ -1,0 +1,36 @@
+<!-- user_list.html -->
+
+{% extends 'index.html' %}
+
+{% block content %}
+
+<div class="container">
+    <div class="container mt-4">
+        <h1 class="display-4">Assignment: {{ assignment.title }}</h1>
+        <h2 class="mt-4">List of submission</h2>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Time submit</th>
+                <th scope="col">File</th>
+                <th scope="col">Student</th>
+                <!-- Thêm các cột khác nếu cần -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for submission in submissions %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>{{ submission.submitted_at}}</td>
+                <td> <a href="{% url 'download_file' assignment.id %}">{{ submission.file }}</a></td>
+                <td>{{ submission.student_name }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

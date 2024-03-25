@@ -1,0 +1,32 @@
+<!-- user_list.html -->
+
+{% extends 'index.html' %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<style>
+    pre {
+        font-family: "Arial", sans-serif;
+    }
+</style>
+<div class="container">
+    <div class="jumbotron">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+        <h1 class="display-4">Resolve Challenge: {{ challenge.nameChallenge }}</h1>
+        <hr class="my-4">
+        <pre>{{ file_content }}</pre>
+    </div>
+</div>
+<!-- Đường dẫn tới các file JavaScript của Bootstrap (nếu cần) -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+{% endblock %}
+
+

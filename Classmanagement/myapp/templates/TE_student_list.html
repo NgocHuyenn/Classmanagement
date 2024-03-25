@@ -1,0 +1,203 @@
+<!-- user_list.html -->
+
+{% extends 'index.html' %}
+
+{% block content %}
+<style>
+    /* Thêm CSS tùy chỉnh nếu cần */
+    .message-form, .edit-form, .delete-form{
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9999; /* Đảm bảo form luôn hiển thị phía trên cùng */
+      background-color: white;
+      padding: 30px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    }
+    .message-form .btn-send {
+    /* Thêm các thuộc tính CSS tùy chỉnh ở đây */
+    background-color: #0f5199a5; /* Màu nền */
+    color: #fff; /* Màu chữ */
+    border: none; /* Không có đường viền */
+    padding: 10px 20px; /* Padding */
+    border-radius: 5px; /* Bo tròn góc */
+}
+
+    /* Hover state */
+    .message-form .btn-send:hover {
+        background-color: #04264b; /* Màu nền khi di chuột qua */
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+        color: #333; /* Màu của nút x */
+        font-size: 20px; /* Kích thước của nút x */
+        background: none;
+        border: none;
+    }
+
+    .close-btn:hover {
+        color: red; /* Màu của nút x khi di chuột qua */
+    }
+  </style>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+<div class="container">
+    <h1>List of students</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">User Name</th>
+                <th scope="col">Full Name</th>
+                <th scope="col">Phone Number</th>
+                <th scope="col">Email</th>
+                <th scope="col">Role</th>
+                <th scope="col">Actions</th>
+                <!-- Thêm các cột khác nếu cần -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>{{ student.username }}</td>
+                <td>{{ student.last_name }} {{ student.first_name }}</td>
+                <td>{{ student.phone_number }}</td>
+                <td>{{ student.email }}</td>
+                <td>{{ student.role}}</td>
+                <td>
+                    <!-- Message button -->
+                    <a href="#" class="btn btn-info" onclick="showForm('{{ student.id }}', 'message')"> Message</a>
+                    
+                    <!-- Form Nhắn Tin -->
+                    <form id="message-form-{{ student.id }}" class="message-form" method="post" style="display:none;" action="{% url 'send_message' %}">
+                        {% csrf_token %}
+                        <button id="message-form-{{ student.id }}" type="button" class="close-btn" onclick="closeForm('{{ student.id }}', 'message')">X</button>
+                        <h2>Message</h2>
+                        <div class="form-group">
+                            <label for="receiver">To:</label>
+                            <input type="text" class="form-control" id="receiver" name="receiver" value="{{ student.email }}"  readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="subject">Subject:</label>
+                            <input type="text" class="form-control" id="subject" name="subject">
+                        </div>
+                        <div class="form-group">
+                            <label for="body">Body:</label>
+                            <textarea class="form-control" id="body" name="body" rows="5"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send</button>
+                    </form>
+
+                    <!-- Edit button -->
+                    <a href="#" class="btn btn-primary edit-btn" onclick="showForm('{{ student.id }}', 'edit')">Edit</a>
+                        <form id="edit-form-{{ student.id }}" class="edit-form" method="POST" style="display:none;" action="{% url 'edit_student' student.id %}">
+                            {% csrf_token %}
+                            <button id="edit-form-{{ student.id }}" type="button" class="close-btn" onclick="closeForm('{{ student.id }}', 'edit')">X</button>
+                            <h2>Edit Student Information</h2> 
+                            <div class="form-group">
+                                <label for="username">Username:</label><span style="color: red;">*</span> <!-- Thêm dấu * để chỉ ra trường bắt buộc -->
+                                <input type="text" class="form-control" id="username" name="username" value="{{ student.username }}" required
+                                    oninvalid="this.setCustomValidity('Username cannot be empty.')"
+                                    oninput="this.setCustomValidity('')">
+                            </div>                            
+                            <div class="form-group">
+                                <label for="fullname">Full Name:</label>
+                                <input type="text" class="form-control" id="fullname" name="fullname" value="{{ student.last_name }} {{ student.first_name }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email:</label><span style="color: red;">*</span>
+                                <input type="email" class="form-control" id="email" name="email" value="{{ student.email }}" required
+                                    oninvalid="this.setCustomValidity('Email cannot be empty.')"
+                                    oninput="this.setCustomValidity('')">
+                            </div>                        
+                            <div class="form-group">
+                                <label for="phone_number">Phone:</label>
+                                <input type="text" class="form-control" id="phone_number" name="phone_number" value="{{ student.phone_number }}">
+                            </div>
+                            <!-- <button type="submit">Save</button> -->
+                            <button type="submit" class="btn btn-primary btn-block">Submit</button>
+                        </form>
+                    
+                    <a href="#" class="btn btn-danger delete-btn" onclick="showForm('{{ student.id }}', 'delete')">Delete</a>
+
+                    <!-- Form for delete confirmation -->
+                    <form id="delete-form-{{ student.id }}" class="delete-form" style="display:none;" action="{% url 'delete_student' student.id %}" method="post" >
+                    {% csrf_token %}
+                    <button id="delete-form-{{ student.id }}" type="button" class="close-btn" onclick="closeForm('{{ student.id }}', 'delete')">X</button>
+                    <input type="hidden" name="_method" value="DELETE">
+                    <div class="modal-body">
+                        Are you sure you want to delete <b>{{ student.username }}</b>? This action cannot be undone.
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="hideForm('{{ student.id }}')">Cancel</button>
+                        <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                    </div>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<script>
+
+    function hideForm(studentId) {
+        var formToHide = document.getElementById(`delete-form-${studentId}`);
+        formToHide.style.display = 'none';
+    }
+
+    function closeForm(studentId, formType){
+        var formToClose = document.getElementById(`${formType}-form-${studentId}`);
+            formToClose.style.display = "none";
+    }
+
+    function showForm(studentId, formType) {
+        // Lấy form tương ứng với loại form được nhấp vào
+        var formToShow = document.getElementById(`${formType}-form-${studentId}`);
+        
+        // Kiểm tra xem form được nhấp vào đã hiển thị hay không
+        var isDisplayed = formToShow.style.display !== 'none';
+
+        // Ẩn tất cả các form trước khi hiển thị form mới
+        document.querySelectorAll('.message-form, .edit-form, .delete-form').forEach(function(form) {
+            form.style.display = 'none';
+        });
+
+        // Nếu form được nhấp vào chưa hiển thị, hiển thị nó
+        if (!isDisplayed) {
+            formToShow.style.display = 'block';
+        }
+    }
+
+
+    // Toggle password visibility
+    document.getElementById("togglePassword").addEventListener("click", function() {
+        var passwordInput = document.getElementById("password");
+        var toggleButton = document.getElementById("togglePassword");
+
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            toggleButton.textContent = "Hide";
+        } else {
+            passwordInput.type = "password";
+            toggleButton.textContent = "Show";
+        }
+    });
+</script>
+
+{% endblock %}

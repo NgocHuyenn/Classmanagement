@@ -1,0 +1,131 @@
+<!-- user_list.html -->
+
+{% extends 'index.html' %}
+{% block content %}
+
+<style>
+    /* Thêm CSS tùy chỉnh nếu cần */
+    .message-form {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 9999; /* Đảm bảo form luôn hiển thị phía trên cùng */
+        background-color: white;
+        padding: 30px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+    }
+
+    .message-form .btn-send {
+        /* Thêm các thuộc tính CSS tùy chỉnh ở đây */
+        background-color: #0f5199a5; /* Màu nền */
+        color: #fff; /* Màu chữ */
+        border: none; /* Không có đường viền */
+        padding: 10px 20px; /* Padding */
+        border-radius: 5px; /* Bo tròn góc */
+    }
+
+    /* Hover state */
+    .message-form .btn-send:hover {
+        background-color: #04264b; /* Màu nền khi di chuột qua */
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+        color: #333; /* Màu của nút x */
+        font-size: 20px; /* Kích thước của nút x */
+        background: none;
+        border: none;
+    }
+
+    .close-btn:hover {
+        color: red; /* Màu của nút x khi di chuột qua */
+    }
+  </style>
+<div class="container">
+    <h1>List of teachers</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">User Name</th>
+                <th scope="col">Full Name</th>
+                <th scope="col">Phone Number</th>
+                <th scope="col">Email</th>
+                <th scope="col">Role</th>
+                <th scope="col">Action</th>
+                <!-- Thêm các cột khác nếu cần -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for teacher in teachers %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>{{ teacher.username }}</td>
+                <td>{{ teacher.last_name }} {{ teacher.first_name }}</td>
+                <td>{{ teacher.phone_number }}</td>
+                <td>{{ teacher.email }}</td>
+                <td>{{ teacher.role}}</td>
+                <td>
+                    <!-- Message button -->
+                    <a href="#" class="btn btn-info" onclick="showForm('{{ teacher.id }}')">Message</a>
+    
+                    <!-- Form Nhắn Tin -->
+                    <form id="message-form-{{ teacher.id }}" class="message-form" method="post" style="display:none;" action="{% url 'send_message' %}">
+                        {% csrf_token %}
+                        <button id="message-form-{{ teacher.id }}" type="button" class="close-btn" onclick="closeForm('{{ teacher.id }}')">X</button>
+                        {% csrf_token %}
+                        <h2>Message</h2>
+                        <div class="form-group">
+                            <label for="receiver">To:</label>
+                            <input type="text" class="form-control" id="receiver" name="receiver" value="{{ teacher.email }}"  readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="subject">Subject:</label>
+                            <input type="text" class="form-control" id="subject" name="subject">
+                        </div>
+                        <div class="form-group">
+                            <label for="body">Body:</label>
+                            <textarea class="form-control" id="body" name="body" rows="5"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send</button>
+                    </form>
+                </td>
+                <!-- Hiển thị các trường dữ liệu khác của sinh viên -->
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+
+    function closeForm(teacherId) {
+        var form = document.getElementById("message-form-" + teacherId);
+        form.style.display = "none";
+    }
+
+
+    function showForm(teacherId) {
+        // Tìm form tin nhắn tương ứng với ID của sinh viên được nhấp
+        var formToShow = document.getElementById("message-form-" + teacherId);
+        
+        // Kiểm tra xem form đã được hiển thị hay không
+        var isDisplayed = formToShow.style.display !== 'none';
+        
+        // Ẩn tất cả các form trước khi hiển thị form mới
+        document.querySelectorAll('.message-form').forEach(function(form) {
+            form.style.display = 'none';
+        });
+        
+        // Hiển thị hoặc ẩn form tương ứng
+        formToShow.style.display = isDisplayed ? 'none' : 'block';
+    }
+</script>
+
+{% endblock %}
